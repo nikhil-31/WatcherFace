@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WatcherFace</string>
+    <string name="analog_name">analogWatch</string>
 </resources>
