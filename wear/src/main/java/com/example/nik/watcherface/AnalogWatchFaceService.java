@@ -286,6 +286,7 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             } else if (mAmbient) {
                 canvas.drawColor(Color.BLACK);
             } else {
+
                 canvas.drawBitmap(mBackgroundScaledBitmap, 0, 0, null);
             }
 
