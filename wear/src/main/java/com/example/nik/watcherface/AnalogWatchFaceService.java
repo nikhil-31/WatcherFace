@@ -170,6 +170,13 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             mSecondPaint.setStyle(Paint.Style.STROKE);
             mMinutePaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
 
+            mTickAndCirclePaint = new Paint();
+            mTickAndCirclePaint.setColor(mWatchHandColor);
+            mTickAndCirclePaint.setStrokeWidth(SECOND_STROKE_WIDTH);
+            mTickAndCirclePaint.setAntiAlias(true);
+            mTickAndCirclePaint.setStyle(Paint.Style.STROKE);
+            mTickAndCirclePaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
+
             // allocate a calendar to calculate local time using the UTC time and time zone
             mCalendar = Calendar.getInstance();
 
@@ -189,7 +196,6 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
         @Override
         public void onTimeTick() {
             super.onTimeTick();
-
             invalidate();
         }
 
@@ -212,26 +218,32 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                 mHourPaint.setColor(Color.WHITE);
                 mMinutePaint.setColor(Color.WHITE);
                 mSecondPaint.setColor(Color.WHITE);
+                mTickAndCirclePaint.setColor(Color.WHITE);
 
                 mHourPaint.setAntiAlias(false);
                 mMinutePaint.setAntiAlias(false);
                 mSecondPaint.setAntiAlias(false);
+                mTickAndCirclePaint.setAntiAlias(false);
 
                 mHourPaint.clearShadowLayer();
                 mMinutePaint.clearShadowLayer();
                 mSecondPaint.clearShadowLayer();
+                mTickAndCirclePaint.clearShadowLayer();
             } else {
                 mHourPaint.setColor(mWatchHandColor);
                 mMinutePaint.setColor(mWatchHandColor);
                 mSecondPaint.setColor(mWatchHandHighlightColor);
+                mTickAndCirclePaint.setColor(mWatchHandColor);
 
                 mHourPaint.setAntiAlias(true);
                 mMinutePaint.setAntiAlias(true);
                 mSecondPaint.setAntiAlias(true);
+                mTickAndCirclePaint.setAntiAlias(true);
 
                 mHourPaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
                 mMinutePaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
                 mSecondPaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
+                mTickAndCirclePaint.setShadowLayer(SHADOW_RADIUS, 0, 0, mWatchHandShadowColor);
             }
 
         }
@@ -277,19 +289,29 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                 canvas.drawBitmap(mBackgroundScaledBitmap, 0, 0, null);
             }
 
+            /* Code to draw the ticks on the watchface, usually it should be created with the background,
+            *  but in cases where we have to allow users to select their own photos, this dynamically
+            *  created them to top of the photo*/
 
-            // Constant to help calculate clock hand rotations
-            final float TWO_PI = (float) Math.PI * 2f;
+            float innerTickRadius = mCenterX -10;
+            float outerTickRadius = mCenterX;
+            for(int tickIndex = 0; tickIndex <12; tickIndex++){
+                float tickRot = (float) (tickIndex*Math.PI*2/12);
+                float innerX = (float) Math.sin(tickRot)*innerTickRadius;
+                float innerY = (float) -Math.cos(tickRot)*innerTickRadius;
+                float outerX = (float) (Math.sin(tickRot)*outerTickRadius);
+                float outerY = (float) (-Math.cos(tickRot)*outerTickRadius);
 
-            int width = bounds.width();
-            int height = bounds.height();
+                canvas.drawLine(mCenterX + innerX, mCenterY+ innerY,
+                        mCenterX+outerX,mCenterY+outerY,mTickAndCirclePaint);
 
+            }
 
             // Compute rotations and lengths for the clock hands
             final float seconds = (mCalendar.get(Calendar.SECOND) + mCalendar.get(Calendar.MILLISECOND) / 1000f);
             final float secondsRotation = seconds * 6f;
 
-            final float minutesRotation = mCalendar.get(Calendar.MONTH) * 6f;
+            final float minutesRotation = mCalendar.get(Calendar.MINUTE) * 6f;
 
             final float hourHandOffset = mCalendar.get(Calendar.MINUTE) / 2f;
             final float hoursRotation = (mCalendar.get(Calendar.HOUR) * 30) + hourHandOffset;
@@ -298,14 +320,16 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
             canvas.save();
 
             canvas.rotate(hoursRotation, mCenterX, mCenterY);
-            canvas.drawLine(mCenterX,
+            canvas.drawLine(
+                    mCenterX,
                     mCenterY - CENTER_GAP_AND_CIRCLE_RADIUS,
                     mCenterX,
                     mCenterY - mHourHandLength,
                     mHourPaint);
 
             canvas.rotate(minutesRotation - hoursRotation, mCenterX, mCenterY);
-            canvas.drawLine(mCenterX,
+            canvas.drawLine(
+                    mCenterX,
                     mCenterY - CENTER_GAP_AND_CIRCLE_RADIUS,
                     mCenterX,
                     mCenterY - mMinuteHandLength,
@@ -321,6 +345,13 @@ public class AnalogWatchFaceService extends CanvasWatchFaceService {
                         mCenterX,
                         mCenterY - mSecondHandLength,
                         mSecondPaint
+                );
+
+                canvas.drawCircle(
+                        mCenterX,
+                        mCenterY,
+                        CENTER_GAP_AND_CIRCLE_RADIUS,
+                        mTickAndCirclePaint
                 );
             }
 
